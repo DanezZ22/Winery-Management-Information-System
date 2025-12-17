@@ -1,6 +1,6 @@
-﻿using Domain.Enumeracije;
+﻿using Domain.Modeli.Enumeracije;
 
-namespace Domain.Servisi
+namespace Domain.Interfaci
 {
     public interface ILoggerServis
     {

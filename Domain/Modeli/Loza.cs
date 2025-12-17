@@ -1,4 +1,4 @@
-﻿using Domain.Enumeracije;
+﻿using Domain.Modeli.Enumeracije;
 
 namespace Domain.Modeli
 {

@@ -8,8 +8,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Konstante\" />
-    <Folder Include="PomocneMetode\" />
+    <Compile Remove="Konstante\**" />
+    <Compile Remove="PomocneMetode\**" />
+    <EmbeddedResource Remove="Konstante\**" />
+    <EmbeddedResource Remove="PomocneMetode\**" />
+    <None Remove="Konstante\**" />
+    <None Remove="PomocneMetode\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Servisi\" />
   </ItemGroup>
 
 </Project>

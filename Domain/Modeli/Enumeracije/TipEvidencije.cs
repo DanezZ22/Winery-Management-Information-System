@@ -4,13 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-
-namespace Domain.Enumeracije
+namespace Domain.Modeli.Enumeracije
 {
-    public enum KategorijaVina
+    public enum TipEvidencije
     {
-        StolnoVino,
-        KvalitetnoVino,
-        PremijumVino
+        INFO,
+        ERROR,
+        WARNING
     }
 }

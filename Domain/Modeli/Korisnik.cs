@@ -1,6 +1,6 @@
-﻿using Domain.Enumeracije;
+﻿using Domain.Modeli.Enumeracije;
 
-using Domain.Enumeracije;
+using Domain.Modeli.Enumeracije;
 
 namespace Domain.Modeli
 {

@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Domain.Enumeracije
+namespace Domain.Modeli.Enumeracije
 {
-    public enum NacinPlacanja
+    public enum TipProdaje
     {
-        Gotovina,
-        Predracun,
-        GotovinskiRacun
+        RestoranskaProadaja,
+        DiskontPica
     }
 }

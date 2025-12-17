@@ -1,5 +1,7 @@
 ﻿using Domain.Enumeracije;
 
+using Domain.Enumeracije;
+
 namespace Domain.Modeli
 {
     public class Korisnik

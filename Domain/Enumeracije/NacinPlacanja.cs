@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace Domain.Enumeracije
 {
-    public enum TipKorisnika
+    public enum NacinPlacanja
     {
-        GlavniEnolog,
-        KelarMajstor
+        Gotovina,
+        Predracun,
+        GotovinskiRacun
     }
 }

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Domain.Enumeracije
 {
-    public enum TipKorisnika
+    public enum TipProdaje
     {
-        GlavniEnolog,
-        KelarMajstor
+        RestoranskaProadaja,
+        DiskontPica
     }
 }

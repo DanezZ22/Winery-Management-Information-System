@@ -4,11 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
 namespace Domain.Enumeracije
 {
-    public enum TipKorisnika
+    public enum KategorijaVina
     {
-        GlavniEnolog,
-        KelarMajstor
+        StolnoVino,
+        KvalitetnoVino,
+        PremijumVino
     }
 }

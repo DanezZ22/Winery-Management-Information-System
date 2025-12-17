@@ -6,9 +6,12 @@ using System.Threading.Tasks;
 
 namespace Domain.Enumeracije
 {
-    public enum TipKorisnika
+    public enum FazaZrelosti
     {
-        GlavniEnolog,
-        KelarMajstor
+        Posadjena,
+        Cveta,
+        Zrenje,
+        SpremnaZaBerbu,
+        Obrana
     }
 }

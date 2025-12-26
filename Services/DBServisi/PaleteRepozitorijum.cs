@@ -12,27 +12,11 @@ namespace Services.DBServisi
 {
     public class PaleteRepozitorijum : IPaleteRepozitorijum
     {
+        private readonly IBazaPodataka bazaPodataka;
 
-
-        public bool AzurirajPaletu(Paleta paleta)
+        public PaleteRepozitorijum(IBazaPodataka bazaPodataka)
         {
-            try
-            {
-                var postojecaPaleta = IBazaPodataka.Tabele.Palete.FirstOrDefault(p => p.Id == paleta.Id);
-                if(postojecaPaleta != null)
-                {
-                    int index = IBazaPodataka.Tabele.Palete.IndexOf(postojecaPaleta);
-
-                    IBazaPodataka.Tabele.Palete[index] = paleta;
-                    bazePodataka.SacuvajPromene();
-                    return true;
-                }
-                return false;
-            }
-            catch
-            {
-                return false;
-            }
+            this.bazaPodataka = bazaPodataka;
         }
 
         public Paleta DodajPaletu(Paleta paleta)
@@ -41,9 +25,6 @@ namespace Services.DBServisi
             {
                 paleta.Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + bazaPodataka.Tabele.Palete.Count;
                 paleta.Sifra = $"PAL-{DateTime.Now.Year}-{paleta.Id}";
-
-
-
                 bazaPodataka.Tabele.Palete.Add(paleta);
                 bazaPodataka.SacuvajPromene();
                 return paleta;
@@ -54,42 +35,11 @@ namespace Services.DBServisi
             }
         }
 
-        public bool ObrisiPaletu(long id)
-        {
-            try
-            {
-                var paleta = IBazaPodataka.Tabele.Palete.FirstOrDefault(p  => p.Id == id);
-                if (paleta != null)
-                {
-                    IBazaPodataka.Tabele.Palete.Remove(paleta)
-                    IBazaPodataka.SacuvajPromene();
-                    return true;
-                }
-                return false;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public IEnumerable<Paleta> PronadjiPaletePoStatusu(StatusPalete status)
-        {
-            try
-            {
-                return IBazaPodataka.Tabele.Palete.Where(p => p.Status == status);
-            }
-            catch
-            {
-                return new List<Paleta>();
-            }
-        }
-
         public Paleta PronadjiPaletuPoId(long id)
         {
             try
             {
-                return IBazaPodataka.Tabele.Palete.FirstOrDefault(p => p.Id == id);
+                return bazaPodataka.Tabele.Palete.FirstOrDefault(p => p.Id == id) ?? new Paleta();
             }
             catch
             {
@@ -101,11 +51,62 @@ namespace Services.DBServisi
         {
             try
             {
-                return IBazaPodataka.Tabele.Palete;
+                return bazaPodataka.Tabele.Palete;
             }
             catch
             {
                 return new List<Paleta>();
+            }
+        }
+
+        public IEnumerable<Paleta> PronadjiPaletePoStatusu(StatusPalete status)
+        {
+            try
+            {
+                return bazaPodataka.Tabele.Palete.Where(p => p.Status == status);
+            }
+            catch
+            {
+                return new List<Paleta>();
+            }
+        }
+
+        public bool AzurirajPaletu(Paleta paleta)
+        {
+            try
+            {
+                var postojecaPaleta = bazaPodataka.Tabele.Palete.FirstOrDefault(p => p.Id == paleta.Id);
+                if (postojecaPaleta != null)
+                {
+                    int index = bazaPodataka.Tabele.Palete.IndexOf(postojecaPaleta);
+                    bazaPodataka.Tabele.Palete[index] = paleta;
+                    bazaPodataka.SacuvajPromene();
+                    return true;
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool ObrisiPaletu(long id)
+        {
+            try
+            {
+                var paleta = bazaPodataka.Tabele.Palete.FirstOrDefault(p => p.Id == id);
+                if (paleta != null)
+                {
+                    bazaPodataka.Tabele.Palete.Remove(paleta);
+                    bazaPodataka.SacuvajPromene();
+                    return true;
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
             }
         }
     }

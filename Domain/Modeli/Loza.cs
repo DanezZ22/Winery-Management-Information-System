@@ -15,7 +15,6 @@ namespace Domain.Modeli
 
         public Loza(string naziv, double nivoSecera, int godinaSadnje, string regionUzgoja)
         {
-            Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             Naziv = naziv;
             NivoSecera = nivoSecera;
             GodinaSadnje = godinaSadnje;

@@ -21,8 +21,6 @@ namespace Domain.Modeli
 
         public Paleta(string adresaOdredista, long idVinskogPodruma)
         {
-            Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            Sifra = $"PAL-{DateTime.Now.Year}-{Id}";
             AdresaOdredista = adresaOdredista;
             IdVinskogPodruma = idVinskogPodruma;
             Status = StatusPalete.Upakovana;

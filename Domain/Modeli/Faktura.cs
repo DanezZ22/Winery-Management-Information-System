@@ -20,10 +20,8 @@ namespace Domain.Modeli
 
         public Faktura(TipProdaje tipProdaje, NacinPlacanja nacinPlacanja)
         {
-            Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             TipProdaje = tipProdaje;
             NacinPlacanja = nacinPlacanja;
-            DatumKreiranja = DateTime.Now;
         }
     }
 }

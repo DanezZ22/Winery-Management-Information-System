@@ -6,9 +6,9 @@ namespace Database.Repozitorijumi
 {
     public class KorisniciRepozitorijum : IKorisniciRepozitorijum
     {
-        IBazaPodataka bazaPodataka;
+        bazaPodataka bazaPodataka;
 
-        public KorisniciRepozitorijum(IBazaPodataka baza)
+        public KorisniciRepozitorijum(bazaPodataka baza)
         {
             bazaPodataka = baza;
         }

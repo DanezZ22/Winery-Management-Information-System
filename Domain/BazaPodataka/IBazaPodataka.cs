@@ -2,8 +2,7 @@
 {
     public interface IBazaPodataka
     {
-        public TabeleBazaPodataka Tabele { get; set; }
-
-        public bool SacuvajPromene();
+        TabeleBazaPodataka Tabele { get; set; }
+        bool SacuvajPromene();
     }
 }

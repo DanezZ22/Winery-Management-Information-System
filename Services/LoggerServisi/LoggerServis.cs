@@ -10,24 +10,28 @@ namespace Services.LoggerServisi
 {
     internal class LoggerServis : ILoggerServis
     {
+
+        private readonly string putanjaDoLoga;
+
+        public LoggerServis(string putanjaDoLoga)
+        {
+            this.putanjaDoLoga = putanjaDoLoga;
+
+            if(!File.Exists(putanjaDoLoga))
+            {
+                File.Create(putanjaDoLoga).Close();
+            }
+                
+         }
+
         public bool EvidentirajDogadjaj(TipEvidencije tip, string poruka)
         {
             try
             {
-                switch (tip)
-                {
-                    case TipEvidencije.INFO:
-                        poruka = "INFO: " + poruka;
-                        break;
-                    case TipEvidencije.ERROR:
-                        poruka = "ERROR: " + poruka; 
-                        break;
-                    case TipEvidencije.WARNING:
-                        poruka = "WARNING: " + poruka;
-                        break;
-                }
-                using var sw = new StreamWriter("log.txt", append: true);
-                sw.Write(poruka);
+                string vreme = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss");
+                string logPoruka = $"[{vreme}] [{tip}] {poruka}";
+
+                File.AppendAllText(putanjaDoLoga, logPoruka + Environment.NewLine);
                 return true;
             }
             catch

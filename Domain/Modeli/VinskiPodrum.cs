@@ -18,7 +18,6 @@ namespace Domain.Modeli
 
         public VinskiPodrum(string naziv, double temperaturaSkladistenja, int maxBrojPaleta)
         {
-            Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             Naziv = naziv;
             TemperaturaSkladistenja = temperaturaSkladistenja;
             MaxBrojPaleta = maxBrojPaleta;

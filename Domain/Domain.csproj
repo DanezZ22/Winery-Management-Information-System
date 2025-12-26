@@ -16,8 +16,4 @@
     <None Remove="PomocneMetode\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Servisi\" />
-  </ItemGroup>
-
 </Project>

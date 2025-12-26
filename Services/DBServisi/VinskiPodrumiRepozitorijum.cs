@@ -11,33 +11,18 @@ namespace Services.DBServisi
 {
     public class VinskiPodrumiRepozitorijum : IVinskiPodrumiRepozitorijum
     {
-        public bool AzuzirajVinskiPodrum(VinskiPodrum podrum)
-        {
-            try
-            {
-                var postojeciVinskiPodrum = IBazaPodataka.Tabele.VinskiPodrumi.FirstOrDefault(p => p.Id == podrum.Id);
-                if (postojeciVinskiPodrum != null)
-                {
-                    int index = IBazaPodataka.Tabele.VinskiPodrum.IndexOf(postojeciVinskiPodrum);
+        private readonly IBazaPodataka bazaPodataka;
 
-                    IBazaPodataka.Tabele.VinskiPodrum[index] = podrum;
-                    bazePodataka.SacuvajPromene();
-                    return true;
-                }
-                return false;
-            }
-            catch
-            {
-                return false;
-            }
+        public VinskiPodrumiRepozitorijum(IBazaPodataka bazaPodataka)
+        {
+            this.bazaPodataka = bazaPodataka;
         }
 
         public VinskiPodrum DodajVinskiPodrum(VinskiPodrum podrum)
         {
             try
             {
-                podrum.Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + bazaPodataka.Tabele.VisnkiPodrumi.Count;
-
+                podrum.Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + bazaPodataka.Tabele.VinskiPodrumi.Count;
                 bazaPodataka.Tabele.VinskiPodrumi.Add(podrum);
                 bazaPodataka.SacuvajPromene();
                 return podrum;
@@ -48,30 +33,11 @@ namespace Services.DBServisi
             }
         }
 
-        public bool ObrisiVinskiPodrum(long id)
-        {
-            try
-            {
-                var podrum = IBazaPodataka.Tabele.VinskiPodrumi.FirstOrDefault(p => p.Id == id);
-                if (podrum != null)
-                {
-                    IBazaPodataka.Tabele.VinskiPodrumi.Remove(podrum)
-                    IBazaPodataka.SacuvajPromene();
-                    return true;
-                }
-                return false;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         public VinskiPodrum PronadjiVinskiPodrumPoId(long id)
         {
             try
             {
-                return IBazaPodataka.Tabele.VinskiPodrumi.FirstOrDefault(p => p.Id == id);
+                return bazaPodataka.Tabele.VinskiPodrumi.FirstOrDefault(vp => vp.Id == id) ?? new VinskiPodrum();
             }
             catch
             {
@@ -83,12 +49,52 @@ namespace Services.DBServisi
         {
             try
             {
-                return IBazaPodataka.Tabele.VinskiPodrumi;
+                return bazaPodataka.Tabele.VinskiPodrumi;
             }
             catch
             {
                 return new List<VinskiPodrum>();
             }
         }
+
+        public bool AzurirajVinskiPodrum(VinskiPodrum podrum)
+        {
+            try
+            {
+                var postojeciPodrum = bazaPodataka.Tabele.VinskiPodrumi.FirstOrDefault(vp => vp.Id == podrum.Id);
+                if (postojeciPodrum != null)
+                {
+                    int index = bazaPodataka.Tabele.VinskiPodrumi.IndexOf(postojeciPodrum);
+                    bazaPodataka.Tabele.VinskiPodrumi[index] = podrum;
+                    bazaPodataka.SacuvajPromene();
+                    return true;
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool ObrisiVinskiPodrum(long id)
+        {
+            try
+            {
+                var podrum = bazaPodataka.Tabele.VinskiPodrumi.FirstOrDefault(vp => vp.Id == id);
+                if (podrum != null)
+                {
+                    bazaPodataka.Tabele.VinskiPodrumi.Remove(podrum);
+                    bazaPodataka.SacuvajPromene();
+                    return true;
+                }
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
     }
 }

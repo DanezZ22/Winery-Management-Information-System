@@ -21,13 +21,10 @@ namespace Domain.Modeli
 
         public Vino(string naziv, KategorijaVina kategorija, double zapremina, long idLoze)
         {
-            Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             Naziv = naziv;
             Kategorija = kategorija;
             Zapremina = zapremina;
-            SifraSerije = $"VN-{DateTime.Now.Year}-{Id}";
             IdLoze = idLoze;
-            DatumFlasiranja = DateTime.Now;
         }
 
 

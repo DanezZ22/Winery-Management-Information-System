@@ -12,7 +12,7 @@ namespace Domain.Repozitorijumi
         VinskiPodrum DodajVinskiPodrum(VinskiPodrum podrum);
         VinskiPodrum PronadjiVinskiPodrumPoId(long id);
         IEnumerable<VinskiPodrum> SviVinskiPodrumi();
-        bool AzuzirajVinskiPodrum(VinskiPodrum podrum);
+        bool AzurirajVinskiPodrum(VinskiPodrum podrum);
         bool ObrisiVinskiPodrum(long id);
     }
 }

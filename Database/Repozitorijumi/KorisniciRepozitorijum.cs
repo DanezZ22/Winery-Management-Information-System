@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Services.DBServisi
+namespace Database.Repozitorijumi
 {
     public class KorisniciRepozitorijum : IKorisniciRepozitorijum
     {

@@ -8,15 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="BazaPodataka\**" />
+    <EmbeddedResource Remove="BazaPodataka\**" />
+    <None Remove="BazaPodataka\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="BazaPodataka\" />
   </ItemGroup>
 
 </Project>

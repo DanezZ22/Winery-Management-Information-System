@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace Database
+namespace Database.Repozitorijumi
 {
     public class XmlBazaPodataka : IBazaPodataka
     {

@@ -1,5 +1,6 @@
-﻿using Domain.Modeli;
-using Domain.Servisi;
+﻿using Domain.Interfaci;
+using Domain.Modeli;
+
 
 namespace Presentation.Authentifikacija
 {

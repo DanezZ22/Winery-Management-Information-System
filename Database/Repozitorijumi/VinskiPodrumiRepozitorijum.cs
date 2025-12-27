@@ -7,7 +7,7 @@ using Domain.BazaPodataka;
 using Domain.Modeli;
 using Domain.Repozitorijumi;
 
-namespace Services.DBServisi
+namespace Database.Repozitorijumi
 {
     public class VinskiPodrumiRepozitorijum : IVinskiPodrumiRepozitorijum
     {

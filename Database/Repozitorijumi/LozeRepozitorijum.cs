@@ -8,7 +8,7 @@ using Domain.Modeli;
 using Domain.Modeli.Enumeracije;
 using Domain.Repozitorijumi;
 
-namespace Services.DBServisi
+namespace Database.Repozitorijumi
 {
     public class LozeRepozitorijum : ILozeRepozitorijum
     {

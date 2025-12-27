@@ -21,11 +21,11 @@ namespace Services.DBServisi
         public Loza DodajLozu(Loza loza)
         {
             try {
-                loza.Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + bazaPodataka.Tabele.Loza.Count;
+                loza.Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + bazaPodataka.Tabele.Loze.Count;
 
 
 
-                bazaPodataka.Tabele.Loza.Add(loza);
+                bazaPodataka.Tabele.Loze.Add(loza);
                 bazaPodataka.SacuvajPromene();
 
 
@@ -41,7 +41,7 @@ namespace Services.DBServisi
         {
             try
             {
-                return bazaPodataka.Tabele.Loza.FirstOrDefault(l => l.Id == id) ?? new Loza();
+                return bazaPodataka.Tabele.Loze.FirstOrDefault(l => l.Id == id) ?? new Loza();
             }
             catch
             {
@@ -52,7 +52,7 @@ namespace Services.DBServisi
         {
             try
             {
-                return bazaPodataka.Tabele.Loza;
+                return bazaPodataka.Tabele.Loze;
             }
             catch 
             { 
@@ -64,7 +64,7 @@ namespace Services.DBServisi
         {
             try
             {
-                return bazaPodataka.Tabele.Loza.Where(l => l.Naziv== naziv) ?? new Loza();
+                return bazaPodataka.Tabele.Loze.Where(l => l.Naziv== naziv);
             }
             catch
             {
@@ -75,7 +75,7 @@ namespace Services.DBServisi
         {
             try
             {
-                return bazaPodataka.Tabele.Loza.Where(l => l.FazaZrelosti == faza) ?? new Loza();
+                return bazaPodataka.Tabele.Loze.Where(l => l.FazaZrelosti == faza);
             }
             catch
             {
@@ -86,14 +86,14 @@ namespace Services.DBServisi
         {
             try 
             {
-                var postojecaLoza = bazaPodataka.Tabele.Loza.FirstOrDefault(l => l.Id == loza.Id);
+                var postojecaLoza = bazaPodataka.Tabele.Loze.FirstOrDefault(l => l.Id == loza.Id);
                 if (postojecaLoza != null)
                 {
-                    int index = bazaPodataka.Tabele.Loza.IndexOf(postojecaLoza);
+                    int index = bazaPodataka.Tabele.Loze.IndexOf(postojecaLoza);
 
 
 
-                    bazaPodataka.Tabele.Loza[index] = loza;
+                    bazaPodataka.Tabele.Loze[index] = loza;
                     bazaPodataka.SacuvajPromene();
 
 
@@ -113,10 +113,10 @@ namespace Services.DBServisi
         {
             try
             {
-                var postojecaLoza = bazaPodataka.Tabele.Loza.FirstOrDefault(l => l.Id == id);
+                var postojecaLoza = bazaPodataka.Tabele.Loze.FirstOrDefault(l => l.Id == id);
                 if (postojecaLoza != null)
                 {
-                    bazaPodataka.Tabele.Loza.Remove(postojecaLoza);
+                    bazaPodataka.Tabele.Loze.Remove(postojecaLoza);
                     bazaPodataka.SacuvajPromene();
 
                     return true;

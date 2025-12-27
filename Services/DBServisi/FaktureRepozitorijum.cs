@@ -24,11 +24,11 @@ namespace Services.DBServisi
         {
             try
             {
-                faktura.Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + bazaPodataka.Tabele.Faktura.Count;
+                faktura.Id = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + bazaPodataka.Tabele.Fakture.Count;
 
 
 
-                bazaPodataka.Tabele.Faktura.Add(faktura);
+                bazaPodataka.Tabele.Fakture.Add(faktura);
                 bazaPodataka.SacuvajPromene();
 
 
@@ -45,7 +45,7 @@ namespace Services.DBServisi
         {
             try
             {
-                return bazaPodataka.Tabele.Faktura.FirstOrDefault(f => f.Id == id) ?? new Faktura();
+                return bazaPodataka.Tabele.Fakture.FirstOrDefault(f => f.Id == id) ?? new Faktura();
             }
             catch
             {
@@ -56,7 +56,7 @@ namespace Services.DBServisi
         {
             try
             {
-                return bazaPodataka.Tabele.Faktura;
+                return bazaPodataka.Tabele.Fakture;
             }
             catch
             {
@@ -67,14 +67,14 @@ namespace Services.DBServisi
         {
             try
             {
-                var postojecaFaktura = bazaPodataka.Tabele.Faktura.FirstOrDefault(f => f.Id == faktura.Id);
+                var postojecaFaktura = bazaPodataka.Tabele.Fakture.FirstOrDefault(f => f.Id == faktura.Id);
                 if (postojecaFaktura != null)
                 {
-                    int index = bazaPodataka.Tabele.Faktura.IndexOf(postojecaFaktura);
+                    int index = bazaPodataka.Tabele.Fakture.IndexOf(postojecaFaktura);
 
 
 
-                    bazaPodataka.Tabele.Faktura[index] = faktura;
+                    bazaPodataka.Tabele.Fakture[index] = faktura;
                     bazaPodataka.SacuvajPromene();
 
 

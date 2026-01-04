@@ -14,7 +14,7 @@ namespace Domain.Repozitorijumi
         Vino PronadjiVinoPoId(long id);
         IEnumerable<Vino> SvaVina();
         IEnumerable<Vino> PronadjiVinaPoKategoriji(KategorijaVina kategorija);
-        bool AzuzirajVino(Vino vino);
-        bool ObrasniVino(long id);
+        bool AzurirajVino(Vino vino);
+        bool ObrisiVino(long id);
     }
 }

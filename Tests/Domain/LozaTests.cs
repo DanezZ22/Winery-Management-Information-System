@@ -29,6 +29,7 @@ namespace Tests.Domain
             Assert.That(loza.FazaZrelosti, Is.EqualTo(FazaZrelosti.Posadjena));
         }
 
+        [Test]
         public void Loza_ProveraDaLiNivoSeceraOstajeUDobromOpsegu_Uspesno()
         {
             string naziv = "Lara";
@@ -40,6 +41,8 @@ namespace Tests.Domain
 
             Assert.That(loza.NivoSecera, Is.InRange(15.0, 28.0));
         }
+
+        [Test]
         public void Loza_ProveraPromeneFazeZrelosti_Uspesno()
         {
             string naziv = "Lara";

@@ -31,6 +31,7 @@ namespace Services.AutenftikacioniServisi
                 if(korisnik.Lozinka != loznika)
                 {
                     loggerServis.EvidentirajDogadjaj(TipEvidencije.WARNING, $"Neuspešan pokušaj prijave: pogrešna lozinka za korisnika '{korisnickoIme}'");
+                    return (false, new Korisnik());
                 }
                 loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Uspešna prijava korisnika '{korisnickoIme}' ({korisnik.Uloga})");
                 return (true, korisnik);

@@ -74,6 +74,22 @@ namespace Services.PakovanjeServisi
             }
         }
 
+
+        public List<Paleta> DobijSvePalete()
+        {
+            try
+            {
+                var palete = paleteRepozitorijum.SvePalete().ToList();
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Prikazano {palete.Count} paleta");
+                return palete;
+            }
+            catch (Exception ex)
+            {
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.ERROR, $"Greška pri dobijanju paleta: {ex.Message}");
+                return new List<Paleta>();
+            }
+        }
+
         public bool PosaljiPaletuUPodrum(long idPalete)
         {
             try

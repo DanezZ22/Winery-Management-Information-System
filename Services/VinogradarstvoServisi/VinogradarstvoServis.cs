@@ -10,7 +10,7 @@ using Domain.Repozitorijumi;
 
 namespace Services.VinogradarstvoServisi
 {
-    internal class VinogradarstvoServis : IVinogradarstvoServis
+    public class VinogradarstvoServis : IVinogradarstvoServis
     {
 
         private readonly ILozeRepozitorijum lozeRepozitorijum;
@@ -47,7 +47,7 @@ namespace Services.VinogradarstvoServisi
         }
 
 
-        public bool PromeniNivoSecera(long idLoze, double procenat)
+        public Loza PromeniNivoSecera(long idLoze, double procenat)
         {
             try
             {
@@ -55,10 +55,12 @@ namespace Services.VinogradarstvoServisi
                 if(loza.Id == 0)
                 {
                     loggerServis.EvidentirajDogadjaj(TipEvidencije.WARNING, $"Loza sa ID {idLoze} nije pronadjena");
-                    return false;
+                    return new Loza();
                 }
 
                 double stariNivo = loza.NivoSecera;
+                double promena = loza.NivoSecera * (procenat / 100.0);
+
                 loza.NivoSecera += loza.NivoSecera * (procenat / 100);
                 loza.NivoSecera = Math.Max(15.0, Math.Min(28.0, loza.NivoSecera));
                 loza.NivoSecera = Math.Round(loza.NivoSecera, 2);
@@ -66,14 +68,63 @@ namespace Services.VinogradarstvoServisi
                 lozeRepozitorijum.AzurirajLozu(loza);
 
                 loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Promenjen nivo secera za lozu ID {idLoze} sa {stariNivo} na {loza.NivoSecera} Brix");
-                return true;
+                return loza;
             }
             catch (Exception ex)
             {
                 loggerServis.EvidentirajDogadjaj(TipEvidencije.ERROR, $"Greška pri promeni nivoa šećera: {ex.Message}");
-                return false;
+                return new Loza() ;
             }
         }
+
+
+        public Loza PromeniFazuZrelosti(long idLoze, FazaZrelosti novaFaza)
+        {
+            try
+            {
+                var loza = lozeRepozitorijum.PronadjiLozuPoId(idLoze);
+
+                if (loza.Id == 0)
+                {
+                    loggerServis.EvidentirajDogadjaj(TipEvidencije.WARNING,
+                        $"Loza sa ID {idLoze} nije pronađena");
+                    return new Loza();
+                }
+
+                var staraFaza = loza.FazaZrelosti;
+                loza.FazaZrelosti = novaFaza;
+
+                lozeRepozitorijum.AzurirajLozu(loza);
+
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO,
+                    $"Faza zrelosti loze {idLoze} promenjena sa {staraFaza} na {novaFaza}");
+
+                return loza;
+            }
+            catch (Exception ex)
+            {
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.ERROR,
+                    $"Greška pri promeni faze: {ex.Message}");
+                return new Loza();
+            }
+        }
+
+
+        public List<Loza> DobijSveLoze()
+        {
+            try
+            {
+                var loze = lozeRepozitorijum.SveLoze().ToList();
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Prikazano {loze.Count} loza");
+                return loze;
+            }
+            catch (Exception ex)
+            {
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.ERROR, $"Greška pri dobijanju loza: {ex.Message}");
+                return new List<Loza>();
+            }
+        }
+
         public List<Loza> OberiLoze(string nazivSorte, int brojLoza)
         {
             try
@@ -107,4 +158,5 @@ namespace Services.VinogradarstvoServisi
         }
 
     }
+
 }

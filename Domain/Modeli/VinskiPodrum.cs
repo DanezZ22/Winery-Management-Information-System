@@ -13,7 +13,7 @@ namespace Domain.Modeli
         public double TemperaturaSkladistenja { get; set; }
         public int MaxBrojPaleta { get; set; }
         public List<long> IdPaleta { get; set; } = new List<long>();
-
+        public int MaksimalanBrojPaleta { get; set; }
         public VinskiPodrum() { }
 
         public VinskiPodrum(string naziv, double temperaturaSkladistenja, int maxBrojPaleta)

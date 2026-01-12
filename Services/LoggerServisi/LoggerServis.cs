@@ -8,7 +8,7 @@ using Domain.Modeli.Enumeracije;
 
 namespace Services.LoggerServisi
 {
-    internal class LoggerServis : ILoggerServis
+    public class LoggerServis : ILoggerServis
     {
 
         private readonly string putanjaDoLoga;

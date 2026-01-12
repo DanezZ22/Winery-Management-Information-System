@@ -11,5 +11,6 @@ namespace Domain.Interfaci
     {
         Paleta PakujVino(long idVinskogPodruma, string adresaOdredista, List<long> idVina);
         bool PosaljiPaletuUPodrum(long idPalete);
+        List<Paleta> DobijSvePalete();
     }
 }

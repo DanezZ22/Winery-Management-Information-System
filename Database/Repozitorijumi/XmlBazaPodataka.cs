@@ -39,8 +39,12 @@ namespace Database.Repozitorijumi
                 }
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                // ✅ PRIVREMENO - vidi grešku
+                Console.WriteLine($"GREŠKA XML: {ex.Message}");
+                Console.WriteLine($"Inner: {ex.InnerException?.Message}");
+                File.AppendAllText("xml_error.log", $"{DateTime.Now}: {ex}\n\n");
                 return false;
             }
         }

@@ -50,21 +50,25 @@ namespace Services.ProizvodnjaVinaServisi
                     loggerServis.EvidentirajDogadjaj(TipEvidencije.WARNING,
                         $"Nedostaje {nedostaje} loza za fermentaciju");
 
-                    for (int i = 0; i< nedostaje; i++)
+                    for (int i = 0; i < nedostaje; i++)
                     {
                         Loza novaLoza = vinogradurstvoServis.PosadiNovuLozu(nazivVina, "Toskana");
                         novaLoza.FazaZrelosti = FazaZrelosti.SpremnaZaBerbu;
                         lozeRepozitorijum.AzurirajLozu(novaLoza);
 
-                        var obereneLoze = vinogradurstvoServis.OberiLoze(nazivVina, 1);
-                        if (obereneLoze.Count > 0)
-                            obraneLoze.Add(obereneLoze[0]);
+                        var oberenoLoze = vinogradurstvoServis.OberiLoze(nazivVina, 1);
+                        if (oberenoLoze.Count > 0)
+                            obraneLoze.Add(oberenoLoze[0]);
                     }
                 }
 
                 double optimalniBrix = 24.0;
-                foreach (var loza in obraneLoze)
+                List<Loza> balansirajuceLoze = new List<Loza>();
+
+                for (int i = 0; i < obraneLoze.Count; i++)
                 {
+                    var loza = obraneLoze[i];
+
                     if (loza.NivoSecera > optimalniBrix)
                     {
                         double razlika = loza.NivoSecera - optimalniBrix;
@@ -77,20 +81,23 @@ namespace Services.ProizvodnjaVinaServisi
                         balansirajucaLoza.FazaZrelosti = FazaZrelosti.Obrana;
                         lozeRepozitorijum.AzurirajLozu(balansirajucaLoza);
 
-                        obraneLoze.Add(balansirajucaLoza);
+                        balansirajuceLoze.Add(balansirajucaLoza);
 
                         loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO,
                             $"Posađena balansirajuća loza sa nivoom šećera {balansirajucaLoza.NivoSecera} Brix");
                     }
                 }
 
+                obraneLoze.AddRange(balansirajuceLoze);
+
                 List<Vino> proizvedenaVina = new List<Vino>();
-                for(int i = 0; i < brojFlasa; i++)
+                for (int i = 0; i < brojFlasa; i++)
                 {
                     Vino vino = new Vino(nazivVina, kategorija, zapreminaFlase, obraneLoze[i % obraneLoze.Count].Id);
                     vino = vinaRepozitorijum.DodajVino(vino);
                     proizvedenaVina.Add(vino);
                 }
+
                 loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO,
                     $"Fermentacija završena: proizvedeno {proizvedenaVina.Count} flaša vina '{nazivVina}'");
 

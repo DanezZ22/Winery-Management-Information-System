@@ -16,10 +16,14 @@ namespace Domain.Modeli
         public DateTime DatumKreiranja { get; set; }
         public double UkupanIznos => Stavke.Sum(s => s.Ukupno);
 
-        public Faktura() { }
+        public Faktura() {
+
+            DatumKreiranja = DateTime.Now;
+        }
 
         public Faktura(TipProdaje tipProdaje, NacinPlacanja nacinPlacanja)
         {
+            DatumKreiranja = DateTime.Now;
             TipProdaje = tipProdaje;
             NacinPlacanja = nacinPlacanja;
         }

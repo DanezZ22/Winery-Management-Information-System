@@ -9,6 +9,7 @@ namespace Domain.Modeli.Enumeracije
     public enum TipKorisnika
     {
         GlavniEnolog,
-        KelarMajstor
+        KelarMajstor,
+        Kupac
     }
 }

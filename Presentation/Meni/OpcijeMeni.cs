@@ -45,57 +45,83 @@ namespace Presentation.Meni
             while (!kraj)
             {
                 Console.WriteLine("\n--- OpcijeMeni");
-                Console.WriteLine("1. Vinogradarstvo");
-                Console.WriteLine("2. Proizvodnja Vina");
-                Console.WriteLine("3. Pakovanje");
-                Console.WriteLine("4. Skladištenje");
-                Console.WriteLine("5. Prodaja");
 
-
-                if (prijavljen.Uloga == TipKorisnika.GlavniEnolog)
+                if (prijavljen.Uloga == TipKorisnika.Kupac)
                 {
-                    Console.WriteLine("6. Pregled faktura");
+                    Console.WriteLine("1. Prodaja");
+                    Console.WriteLine("0. Izlaz");
+                }
+                else
+                {
+                    Console.WriteLine("1. Vinogradarstvo");
+                    Console.WriteLine("2. Proizvodnja Vina");
+                    Console.WriteLine("3. Pakovanje");
+                    Console.WriteLine("4. Skladištenje");
+                    Console.WriteLine("5. Prodaja");
+
+                    if (prijavljen.Uloga == TipKorisnika.GlavniEnolog)
+                    {
+                        Console.WriteLine("6. Pregled faktura");
+                    }
+
+                    Console.WriteLine("0. Izlaz");
                 }
 
-                Console.WriteLine("0. Izlaz");
                 Console.WriteLine("\nIzaberite opciju");
-
 
                 string? izbor = Console.ReadLine();
 
-
-                switch (izbor)
+                if (prijavljen.Uloga == TipKorisnika.Kupac)
                 {
-
-                    case "1":
-                        VinogradarstvoMeni();
-                        break;
-                    case "2":
-                        ProizvodnjaVinaMeni();
-                        break;
-                    case "3":
-                        PakovanjeMeni();
-                        break;
-                    case "4":
-                        SkladistenjeMeni();
-                        break;
-                    case "5":
-                        ProdajaMeni();
-                        break;
-                    case "6":
-                        if (prijavljen.Uloga == TipKorisnika.GlavniEnolog)
-                            PregledFakturaMeni();
-                        else
-                            Console.WriteLine("Nemate pristup ovoj opciji.");
-                        break;
-                    case "0":
-                        kraj = true;
-                        Console.WriteLine("Dovidjenja!");
-                        loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Korsnik {prijavljen.KorisnickoIme} se odjavio.");
-                        break;
-                    default:
-                        Console.WriteLine("Nepoznata opcija probajte ponovo");
-                        break;
+                    switch (izbor)
+                    {
+                        case "1":
+                            ProdajaMeni();
+                            break;
+                        case "0":
+                            kraj = true;
+                            Console.WriteLine("Dovidjenja!");
+                            loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Korisnik {prijavljen.KorisnickoIme} se odjavio.");
+                            break;
+                        default:
+                            Console.WriteLine("Nepoznata opcija probajte ponovo");
+                            break;
+                    }
+                }
+                else
+                {
+                    switch (izbor)
+                    {
+                        case "1":
+                            VinogradarstvoMeni();
+                            break;
+                        case "2":
+                            ProizvodnjaVinaMeni();
+                            break;
+                        case "3":
+                            PakovanjeMeni();
+                            break;
+                        case "4":
+                            SkladistenjeMeni();
+                            break;
+                        case "5":
+                            ProdajaMeni();
+                            break;
+                        case "6":
+                            if (prijavljen.Uloga == TipKorisnika.GlavniEnolog)
+                                PregledFakturaMeni();
+                            else
+                                Console.WriteLine("Nemate pristup ovoj opciji.");
+                            break;
+                        case "0":
+                            kraj = true;
+                            Console.WriteLine("Dovidjenja!");
+                            loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Korisnik {prijavljen.KorisnickoIme} se odjavio.");
+                            break;
+                        default:
+                            Console.WriteLine("Nepoznata opcija probajte ponovo");
+                            break;
+                    }
                 }
             }
         }

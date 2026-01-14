@@ -47,12 +47,14 @@ namespace Loger_Bloger
             {
                 Korisnik enolog = new Korisnik("enolog", "enolog123", "Marko Markovic", TipKorisnika.GlavniEnolog);
                 Korisnik kelar = new Korisnik("kelar", "kelar123", "Jovan Jovanovic", TipKorisnika.KelarMajstor);
+                Korisnik kupac = new Korisnik("kupac", "kupac123", "Petar Petrovic", TipKorisnika.Kupac);
 
                 korisniciRepozitorijum.DodajKorisnika(enolog);
                 korisniciRepozitorijum.DodajKorisnika(kelar);
+                korisniciRepozitorijum.DodajKorisnika(kupac);
 
                 loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, "Kreirani inicijalni korisnici sistema");
-                InicijalizujTestnePodatke(vinogradarstvoServis, vinskiPodrumiRepozitorijum, lozeRepozitorijum, loggerServis);
+                InicijalizujTestnePodatke(vinogradarstvoServis, vinskiPodrumiRepozitorijum, lozeRepozitorijum, vinaRepozitorijum, loggerServis);
             }
 
             AutentifikacioniMeni am = new AutentifikacioniMeni(autentifikacijaServis);
@@ -69,7 +71,31 @@ namespace Loger_Bloger
 
             ISkladistenjeServis skladistenjeServis = prijavljen.Uloga == TipKorisnika.GlavniEnolog ? vinskiPodrumSkladistenjeServis : lokalniKelarSkladistenjeServis;
 
-            IProdajaServis prodajaServis = new ProdajaServisi(vinaRepozitorijum, loggerServis, faktureRepozitorijum, paleteRepozitorijum, skladistenjeServis);
+            IProdajaServis prodajaServis;
+
+            if (prijavljen.Uloga == TipKorisnika.Kupac)
+            {
+                prodajaServis = new ProdajaServisAutomatski(
+                    vinaRepozitorijum,
+                    loggerServis,
+                    faktureRepozitorijum,
+                    paleteRepozitorijum,
+                    skladistenjeServis,
+                    proizvodnjaVinaServis,
+                    pakovanjeServis,
+                    vinskiPodrumiRepozitorijum
+                );
+            }
+            else
+            {
+                prodajaServis = new ProdajaServisManuelni(
+                    vinaRepozitorijum,
+                    loggerServis,
+                    faktureRepozitorijum,
+                    paleteRepozitorijum,
+                    skladistenjeServis
+                );
+            }
 
             OpcijeMeni meni = new OpcijeMeni(
                 prijavljen,
@@ -80,7 +106,6 @@ namespace Loger_Bloger
                 prodajaServis,
                 vinskiPodrumServis,
                 loggerServis
-
             );
             meni.PrikaziMeni();
         }
@@ -88,6 +113,7 @@ namespace Loger_Bloger
             IVinogradarstvoServis vinogradarstvoServis,
             IVinskiPodrumiRepozitorijum vinskiPodrumiRepozitorijum,
             ILozeRepozitorijum lozeRepozitorijum,
+            IVinaRepozitorijum vinaRepozitorijum,
             ILoggerServis loggerServis)
         {
             var loza1 = vinogradarstvoServis.PosadiNovuLozu("Sangiovese", "Chianti");
@@ -116,7 +142,32 @@ namespace Loger_Bloger
             var podrum2 = new VinskiPodrum("Lokalni Kelar", 14.0, 5);
             vinskiPodrumiRepozitorijum.DodajVinskiPodrum(podrum2);
 
-            loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, "Inicijalizovani testni podaci: 5 loza i 2 vinska podruma");
+            var vino1 = new Vino("Chianti Classico", KategorijaVina.KvalitetnoVino, 0.75, loza1.Id);
+            vino1.SifraSerije = $"VN-2025-{DateTimeOffset.Now.ToUnixTimeSeconds()}-1";
+            vino1.DatumFlasiranja = DateTime.Now;
+            vinaRepozitorijum.DodajVino(vino1);
+
+            var vino2 = new Vino("Trebbiano Bianco", KategorijaVina.StolnoVino, 0.75, loza2.Id);
+            vino2.SifraSerije = $"VN-2025-{DateTimeOffset.Now.ToUnixTimeSeconds()}-2";
+            vino2.DatumFlasiranja = DateTime.Now;
+            vinaRepozitorijum.DodajVino(vino2);
+
+            var vino3 = new Vino("Merlot Reserve", KategorijaVina.PremijumVino, 0.75, loza3.Id);
+            vino3.SifraSerije = $"VN-2025-{DateTimeOffset.Now.ToUnixTimeSeconds()}-3";
+            vino3.DatumFlasiranja = DateTime.Now;
+            vinaRepozitorijum.DodajVino(vino3);
+
+            var vino4 = new Vino("Chianti Classico", KategorijaVina.KvalitetnoVino, 1.5, loza1.Id);
+            vino4.SifraSerije = $"VN-2025-{DateTimeOffset.Now.ToUnixTimeSeconds()}-4";
+            vino4.DatumFlasiranja = DateTime.Now;
+            vinaRepozitorijum.DodajVino(vino4);
+
+            var vino5 = new Vino("Merlot Reserve", KategorijaVina.PremijumVino, 1.5, loza3.Id);
+            vino5.SifraSerije = $"VN-2025-{DateTimeOffset.Now.ToUnixTimeSeconds()}-5";
+            vino5.DatumFlasiranja = DateTime.Now;
+            vinaRepozitorijum.DodajVino(vino5);
+
+            loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, "Inicijalizovani testni podaci: 5 loza, 2 vinska podruma, 5 vina");
         }
     }
 }

@@ -5,43 +5,38 @@ using Domain.Repozitorijumi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services.ProdajaServisi
 {
     public class ProdajaServisAutomatski : IProdajaServis
     {
-        private const int VINA_PO_PALETI = 24;
-        private const string ADRESA_AUTOMATSKE_ISPORUKE = "Automatska isporuka";
-
         private readonly IVinaRepozitorijum vinaRepozitorijum;
         private readonly ILoggerServis loggerServis;
         private readonly IFaktureRepozitorijum faktureRepozitorijum;
         private readonly ISkladistenjeServis skladistenjeServis;
-        private readonly IPaleteRepozitorijum paleteRepozitorijum;
-        private readonly IProizvodnjaVinaServis proizvodnjaVinaServis;
-        private readonly IPakovanjeServis pakovanjeServis;
-        private readonly IVinskiPodrumiRepozitorijum vinskiPodrumiRepozitorijum;
+        private readonly IAutomatskaProizvodnjaFacade automatskaProizvodnja;
+        private readonly IResursKalkulatorServis resursKalkulator;
+        private readonly IEnumerable<ICenovnaStrategija> cenovneStrategije;
+        private readonly IEnumerable<IPopustStrategija> popustStrategije;
 
         public ProdajaServisAutomatski(
             IVinaRepozitorijum vinaRepozitorijum,
             ILoggerServis loggerServis,
             IFaktureRepozitorijum faktureRepozitorijum,
-            IPaleteRepozitorijum paleteRepozitorijum,
             ISkladistenjeServis skladistenjeServis,
-            IProizvodnjaVinaServis proizvodnjaVinaServis,
-            IPakovanjeServis pakovanjeServis,
-            IVinskiPodrumiRepozitorijum vinskiPodrumiRepozitorijum)
+            IAutomatskaProizvodnjaFacade automatskaProizvodnja,
+            IResursKalkulatorServis resursKalkulator,
+            IEnumerable<ICenovnaStrategija> cenovneStrategije,
+            IEnumerable<IPopustStrategija> popustStrategije)
         {
             this.vinaRepozitorijum = vinaRepozitorijum;
             this.loggerServis = loggerServis;
             this.faktureRepozitorijum = faktureRepozitorijum;
-            this.paleteRepozitorijum = paleteRepozitorijum;
             this.skladistenjeServis = skladistenjeServis;
-            this.proizvodnjaVinaServis = proizvodnjaVinaServis;
-            this.pakovanjeServis = pakovanjeServis;
-            this.vinskiPodrumiRepozitorijum = vinskiPodrumiRepozitorijum;
+            this.automatskaProizvodnja = automatskaProizvodnja;
+            this.resursKalkulator = resursKalkulator;
+            this.cenovneStrategije = cenovneStrategije;
+            this.popustStrategije = popustStrategije;
         }
 
         public List<Vino> DobijKatalog()
@@ -67,12 +62,13 @@ namespace Services.ProdajaServisi
                 Dictionary<KategorijaVina, int> potrebnoPoKategoriji = new Dictionary<KategorijaVina, int>();
 
                 DodajStavkeUFakturu(faktura, stavke, potrebnoPoKategoriji);
-                ObezediProizvodnju(stavke, potrebnoPoKategoriji);
+
+                automatskaProizvodnja.ObezediVina(potrebnoPoKategoriji, stavke);
 
                 int ukupnaPotrebnaVina = stavke.Sum(s => s.kolicina);
-                ObezediPakovanje(ukupnaPotrebnaVina);
+                automatskaProizvodnja.ObezediPalete(ukupnaPotrebnaVina);
 
-                int potrebnePalete = (int)Math.Ceiling(ukupnaPotrebnaVina / (double)VINA_PO_PALETI);
+                int potrebnePalete = resursKalkulator.IzracunajPotrebanBrojPaleta(ukupnaPotrebnaVina);
                 var isporucenePalete = skladistenjeServis.IsporuciPalete(potrebnePalete);
 
                 if (isporucenePalete.Count == 0)
@@ -120,75 +116,6 @@ namespace Services.ProdajaServisi
             }
         }
 
-        private void ObezediProizvodnju(List<(long idVina, int kolicina)> stavke, Dictionary<KategorijaVina, int> potrebnoPoKategoriji)
-        {
-            foreach (var kategorija in potrebnoPoKategoriji.Keys)
-            {
-                var dostupnaVina = vinaRepozitorijum.PronadjiVinaPoKategoriji(kategorija).Count();
-                int potrebno = potrebnoPoKategoriji[kategorija];
-
-                if (dostupnaVina < potrebno)
-                {
-                    int nedostaje = potrebno - dostupnaVina;
-                    loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO,
-                        $"Automatska proizvodnja: nedostaje {nedostaje} vina kategorije {kategorija}");
-
-                    var primerVino = stavke
-                        .Select(s => vinaRepozitorijum.PronadjiVinoPoId(s.idVina))
-                        .FirstOrDefault(v => v.Kategorija == kategorija && v.Id != 0);
-
-                    if (primerVino != null)
-                    {
-                        proizvodnjaVinaServis.ZapocniFermentaciju(
-                            primerVino.Naziv,
-                            primerVino.Kategorija,
-                            nedostaje,
-                            primerVino.Zapremina
-                        );
-                    }
-                }
-            }
-        }
-
-        private void ObezediPakovanje(int ukupnaPotrebnaVina)
-        {
-            int potrebnePalete = (int)Math.Ceiling(ukupnaPotrebnaVina / (double)VINA_PO_PALETI);
-            var dostupnePalete = paleteRepozitorijum.PronadjiPaletePoStatusu(StatusPalete.Otpremljena).Count();
-
-            if (dostupnePalete < potrebnePalete)
-            {
-                int nedostaje = potrebnePalete - dostupnePalete;
-                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO,
-                    $"Automatsko pakovanje: nedostaje {nedostaje} paleta");
-
-                var podrum = vinskiPodrumiRepozitorijum.SviVinskiPodrumi().FirstOrDefault();
-                if (podrum == null)
-                {
-                    loggerServis.EvidentirajDogadjaj(TipEvidencije.ERROR, "Nema dostupnih vinskih podruma");
-                    return;
-                }
-
-                for (int i = 0; i < nedostaje; i++)
-                {
-                    var vinaZaPakovanje = vinaRepozitorijum.SvaVina()
-                        .Take(VINA_PO_PALETI)
-                        .Select(v => v.Id)
-                        .ToList();
-
-                    if (vinaZaPakovanje.Count > 0)
-                    {
-                        var novaPaleta = pakovanjeServis.PakujVino(podrum.Id, ADRESA_AUTOMATSKE_ISPORUKE, vinaZaPakovanje);
-                        if (novaPaleta.Id != 0)
-                        {
-                            pakovanjeServis.PosaljiPaletuUPodrum(novaPaleta.Id);
-                            loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO,
-                                $"Automatski kreirana i otpremljena paleta {novaPaleta.Sifra}");
-                        }
-                    }
-                }
-            }
-        }
-
         private void ObrisiProdataVina(List<(long idVina, int kolicina)> stavke)
         {
             List<long> vinaNaBrisanje = new List<long>();
@@ -220,19 +147,19 @@ namespace Services.ProdajaServisi
 
         private double IzracunajCenu(Vino vino, TipProdaje tipProdaje)
         {
-            double bazna = vino.Kategorija switch
+            var cenovnaStrategija = cenovneStrategije.FirstOrDefault(s => s.PrimenjivZa(vino.Kategorija));
+            if (cenovnaStrategija == null)
             {
-                KategorijaVina.StolnoVino => 8.0,
-                KategorijaVina.KvalitetnoVino => 15.0,
-                KategorijaVina.PremijumVino => 35,
-                _ => 10.0
-            };
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.WARNING, $"Nije pronadjena cenovna strategija za {vino.Kategorija}");
+                return vino.Zapremina * 10.0;
+            }
 
-            double cena = vino.Zapremina * bazna;
+            double cena = cenovnaStrategija.IzracunajCenu(vino);
 
-            if (tipProdaje == TipProdaje.DiskontPica)
+            var popustStrategija = popustStrategije.FirstOrDefault(s => s.PrimenjivZa(tipProdaje));
+            if (popustStrategija != null)
             {
-                cena *= 0.85;
+                cena = popustStrategija.PrimeniPopust(cena);
             }
 
             return Math.Round(cena, 2);

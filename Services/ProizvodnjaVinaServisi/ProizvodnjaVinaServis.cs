@@ -5,8 +5,6 @@ using Domain.Repozitorijumi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services.ProizvodnjaVinaServisi
 {
@@ -14,120 +12,93 @@ namespace Services.ProizvodnjaVinaServisi
     {
         private readonly IVinaRepozitorijum vinaRepozitorijum;
         private readonly ILozeRepozitorijum lozeRepozitorijum;
-        private readonly IVinogradarstvoServis vinogradurstvoServis;
+        private readonly IVinogradarstvoServis vinogradarstvoServis;
         private readonly ILoggerServis loggerServis;
-
+        private readonly IResursKalkulatorServis resursKalkulator;
+        private readonly IBalansiranjeSeceraServis balansiranjeSecera;
+        private readonly IKonfiguracijaVinarije konfiguracija;
 
         public ProizvodnjaVinaServis(
             IVinaRepozitorijum vinaRepozitorijum,
             ILozeRepozitorijum lozeRepozitorijum,
-            IVinogradarstvoServis vinogradurstvoServis,
-            ILoggerServis loggerServis)
+            IVinogradarstvoServis vinogradarstvoServis,
+            ILoggerServis loggerServis,
+            IResursKalkulatorServis resursKalkulator,
+            IBalansiranjeSeceraServis balansiranjeSecera,
+            IKonfiguracijaVinarije konfiguracija)
         {
             this.vinaRepozitorijum = vinaRepozitorijum;
             this.lozeRepozitorijum = lozeRepozitorijum;
-            this.vinogradurstvoServis = vinogradurstvoServis;
+            this.vinogradarstvoServis = vinogradarstvoServis;
             this.loggerServis = loggerServis;
+            this.resursKalkulator = resursKalkulator;
+            this.balansiranjeSecera = balansiranjeSecera;
+            this.konfiguracija = konfiguracija;
         }
 
-        public List<Vino> ZapocniFermentaciju(string nazivVina, KategorijaVina kategorija, int brojFlasa, double zapreminaFlase)
+        public List<Vino> ZapocniFermentaciju(string nazivVina, KategorijaVina kategorijaVina, int brojFlasa, double zapreminaFlase)
         {
             try
             {
-                double potrebnaKolicinaVina = brojFlasa * zapreminaFlase;
-                int potrebnoBrojLoza = (int)Math.Ceiling(potrebnaKolicinaVina / 1.2);
+                int potrebnoBrojLoza = resursKalkulator.IzracunajPotrebanBrojLoza(brojFlasa, zapreminaFlase);
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Fermentacija: potrebno {potrebnoBrojLoza} loza za {brojFlasa} flasa");
 
-                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO,
-                    $"Započeta fermentacija: potrebno {potrebnoBrojLoza} loza za {brojFlasa} flaša od {zapreminaFlase}L");
-
-                var obraneLoze = lozeRepozitorijum.PronadjiLozePoFaziZrelosti(FazaZrelosti.Obrana)
-                    .Take(potrebnoBrojLoza)
-                    .ToList();
+                List<Loza> obraneLoze = lozeRepozitorijum.PronadjiLozePoFaziZrelosti(FazaZrelosti.Obrana).ToList();
 
                 if (obraneLoze.Count < potrebnoBrojLoza)
                 {
                     int nedostaje = potrebnoBrojLoza - obraneLoze.Count;
-                    loggerServis.EvidentirajDogadjaj(TipEvidencije.WARNING,
-                        $"Nedostaje {nedostaje} loza za fermentaciju");
+                    loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Nedostaje {nedostaje} loza, pokrecem automatsko sadenje");
 
                     for (int i = 0; i < nedostaje; i++)
                     {
-                        Loza novaLoza = vinogradurstvoServis.PosadiNovuLozu(nazivVina, "Toskana");
+                        Loza novaLoza = vinogradarstvoServis.PosadiNovuLozu(nazivVina, konfiguracija.DefaultniRegion);
                         novaLoza.FazaZrelosti = FazaZrelosti.SpremnaZaBerbu;
                         lozeRepozitorijum.AzurirajLozu(novaLoza);
 
-                        var oberenoLoze = vinogradurstvoServis.OberiLoze(nazivVina, 1);
-                        if (oberenoLoze.Count > 0)
-                            obraneLoze.Add(oberenoLoze[0]);
+                        var obereneLoze = vinogradarstvoServis.OberiLoze(nazivVina, 1);
+                        if (obereneLoze.Count > 0)
+                        {
+                            obraneLoze.Add(obereneLoze[0]);
+                        }
                     }
                 }
 
-                double optimalniBrix = 24.0;
-                List<Loza> balansirajuceLoze = new List<Loza>();
-
-                for (int i = 0; i < obraneLoze.Count; i++)
-                {
-                    var loza = obraneLoze[i];
-
-                    if (loza.NivoSecera > optimalniBrix)
-                    {
-                        double razlika = loza.NivoSecera - optimalniBrix;
-                        loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO,
-                            $"Loza ID {loza.Id} ima previsok nivo šećera ({loza.NivoSecera} Brix), potrebno balansiranje");
-
-                        Loza balansirajucaLoza = vinogradurstvoServis.PosadiNovuLozu(nazivVina, "Toskana");
-                        double noviNivo = balansirajucaLoza.NivoSecera - razlika;
-                        balansirajucaLoza.NivoSecera = Math.Max(15.0, noviNivo);
-                        balansirajucaLoza.FazaZrelosti = FazaZrelosti.Obrana;
-                        lozeRepozitorijum.AzurirajLozu(balansirajucaLoza);
-
-                        balansirajuceLoze.Add(balansirajucaLoza);
-
-                        loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO,
-                            $"Posađena balansirajuća loza sa nivoom šećera {balansirajucaLoza.NivoSecera} Brix");
-                    }
-                }
-
+                List<Loza> balansirajuceLoze = balansiranjeSecera.BalansirajSecer(obraneLoze, konfiguracija.OptimalniBrix);
                 obraneLoze.AddRange(balansirajuceLoze);
 
                 List<Vino> proizvedenaVina = new List<Vino>();
                 for (int i = 0; i < brojFlasa; i++)
                 {
-                    Vino vino = new Vino(nazivVina, kategorija, zapreminaFlase, obraneLoze[i % obraneLoze.Count].Id);
+                    Vino vino = new Vino(nazivVina, kategorijaVina, zapreminaFlase, obraneLoze[i % obraneLoze.Count].Id);
                     vino = vinaRepozitorijum.DodajVino(vino);
+                    vino.SifraSerije = $"VN-{DateTime.Now.Year}-{vino.Id}";
+                    vino.DatumFlasiranja = DateTime.Now;
+                    vinaRepozitorijum.AzurirajVino(vino);
                     proizvedenaVina.Add(vino);
                 }
 
-                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO,
-                    $"Fermentacija završena: proizvedeno {proizvedenaVina.Count} flaša vina '{nazivVina}'");
-
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Fermentacija zavrsena: proizvedeno {proizvedenaVina.Count} flasa");
                 return proizvedenaVina;
             }
             catch (Exception ex)
             {
-                loggerServis.EvidentirajDogadjaj(TipEvidencije.ERROR,
-                    $"Greška pri fermentaciji: {ex.Message}");
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.ERROR, $"Greska pri fermentaciji: {ex.Message}");
                 return new List<Vino>();
             }
         }
 
-        public List<Vino> DobijProizvedenaVina(KategorijaVina kategorija, int kolicina)
+        public List<Vino> DobijProizvedenaVina(KategorijaVina kategorijaVina, int kolicina)
         {
             try
             {
-                var vina = vinaRepozitorijum.PronadjiVinaPoKategoriji(kategorija)
-                    .Take(kolicina)
-                    .ToList();
-
-                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO,
-                    $"Vraćeno {vina.Count} vina kategorije {kategorija}");
-
+                var vina = vinaRepozitorijum.PronadjiVinaPoKategoriji(kategorijaVina).Take(kolicina).ToList();
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Dobijeno {vina.Count} vina kategorije {kategorijaVina}");
                 return vina;
             }
             catch (Exception ex)
             {
-                loggerServis.EvidentirajDogadjaj(TipEvidencije.ERROR,
-                    $"Greška pri dobijanju vina: {ex.Message}");
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.ERROR, $"Greska pri dobavljanju vina: {ex.Message}");
                 return new List<Vino>();
             }
         }

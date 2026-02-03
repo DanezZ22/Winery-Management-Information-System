@@ -11,7 +11,7 @@ namespace Tests.Services.AutentifikacioniServisTests
     [TestFixture]
     public class AutentifikacioniServisTests
     {
-        private Mock<IKorisniciRepozitorijum> mockKorisniciRepo;
+        private Mock<IKorisniciRepozitorijum>? mockKorisniciRepo;
         private Mock<ILoggerServis> mockLogger;
         private AutentifikacioniServis servis;
 

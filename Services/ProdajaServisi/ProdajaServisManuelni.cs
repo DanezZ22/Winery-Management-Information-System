@@ -5,8 +5,6 @@ using Domain.Repozitorijumi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Services.ProdajaServisi
 {
@@ -16,20 +14,26 @@ namespace Services.ProdajaServisi
         private readonly ILoggerServis loggerServis;
         private readonly IFaktureRepozitorijum faktureRepozitorijum;
         private readonly ISkladistenjeServis skladistenjeServis;
-        private readonly IPaleteRepozitorijum paleteRepozitorijum;
+        private readonly IResursKalkulatorServis resursKalkulator;
+        private readonly IEnumerable<ICenovnaStrategija> cenovneStrategije;
+        private readonly IEnumerable<IPopustStrategija> popustStrategije;
 
         public ProdajaServisManuelni(
             IVinaRepozitorijum vinaRepozitorijum,
             ILoggerServis loggerServis,
             IFaktureRepozitorijum faktureRepozitorijum,
-            IPaleteRepozitorijum paleteRepozitorijum,
-            ISkladistenjeServis skladistenjeServis)
+            ISkladistenjeServis skladistenjeServis,
+            IResursKalkulatorServis resursKalkulator,
+            IEnumerable<ICenovnaStrategija> cenovneStrategije,
+            IEnumerable<IPopustStrategija> popustStrategije)
         {
             this.vinaRepozitorijum = vinaRepozitorijum;
             this.loggerServis = loggerServis;
             this.faktureRepozitorijum = faktureRepozitorijum;
-            this.paleteRepozitorijum = paleteRepozitorijum;
             this.skladistenjeServis = skladistenjeServis;
+            this.resursKalkulator = resursKalkulator;
+            this.cenovneStrategije = cenovneStrategije;
+            this.popustStrategije = popustStrategije;
         }
 
         public List<Vino> DobijKatalog()
@@ -37,7 +41,7 @@ namespace Services.ProdajaServisi
             try
             {
                 var katalog = vinaRepozitorijum.SvaVina().ToList();
-                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Katalog prikazan san {katalog.Count} vina");
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Katalog prikazan sa {katalog.Count} vina");
                 return katalog;
             }
             catch (Exception ex)
@@ -68,13 +72,13 @@ namespace Services.ProdajaServisi
                 }
 
                 int ukupnaPotrebnaVina = stavke.Sum(s => s.kolicina);
-                int potrebnePalete = (int)Math.Ceiling(ukupnaPotrebnaVina / 24.0);
+                int potrebnePalete = resursKalkulator.IzracunajPotrebanBrojPaleta(ukupnaPotrebnaVina);
 
                 var isporucenePalete = skladistenjeServis.IsporuciPalete(potrebnePalete);
 
                 if (isporucenePalete.Count == 0)
                 {
-                    loggerServis.EvidentirajDogadjaj(TipEvidencije.WARNING, $"Nema dostupnih paleta za prodaju.");
+                    loggerServis.EvidentirajDogadjaj(TipEvidencije.WARNING, "Nema dostupnih paleta za prodaju.");
 
                     Console.WriteLine("\nGREŠKA: Nema dovoljno paleta za isporuku!");
                     Console.WriteLine($"Potrebno: {potrebnePalete} paleta");
@@ -87,11 +91,10 @@ namespace Services.ProdajaServisi
                     return new Faktura();
                 }
 
-                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Isporuceno {isporucenePalete.Count} za prodaju");
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Isporuceno {isporucenePalete.Count} paleta za prodaju");
 
                 faktura = faktureRepozitorijum.DodajFakturu(faktura);
-
-                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Kreirana faktura ID {faktura.Id} ukupan iznos: {faktura.UkupanIznos:F2} EUR");
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Kreirana faktura ID {faktura.Id}, iznos: {faktura.UkupanIznos:F2} EUR");
 
                 return faktura;
             }
@@ -104,19 +107,19 @@ namespace Services.ProdajaServisi
 
         private double IzracunajCenu(Vino vino, TipProdaje tipProdaje)
         {
-            double bazna = vino.Kategorija switch
+            var cenovnaStrategija = cenovneStrategije.FirstOrDefault(s => s.PrimenjivZa(vino.Kategorija));
+            if (cenovnaStrategija == null)
             {
-                KategorijaVina.StolnoVino => 8.0,
-                KategorijaVina.KvalitetnoVino => 15.0,
-                KategorijaVina.PremijumVino => 35,
-                _ => 10.0
-            };
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.WARNING, $"Nije pronadjena cenovna strategija za {vino.Kategorija}");
+                return vino.Zapremina * 10.0;
+            }
 
-            double cena = vino.Zapremina * bazna;
+            double cena = cenovnaStrategija.IzracunajCenu(vino);
 
-            if (tipProdaje == TipProdaje.DiskontPica)
+            var popustStrategija = popustStrategije.FirstOrDefault(s => s.PrimenjivZa(tipProdaje));
+            if (popustStrategija != null)
             {
-                cena *= 0.85;
+                cena = popustStrategija.PrimeniPopust(cena);
             }
 
             return Math.Round(cena, 2);
@@ -127,12 +130,12 @@ namespace Services.ProdajaServisi
             try
             {
                 var fakture = faktureRepozitorijum.SveFakture().ToList();
-                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, $"Vidjene su sve fakture");
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.INFO, "Prikazane sve fakture");
                 return fakture;
             }
             catch
             {
-                loggerServis.EvidentirajDogadjaj(TipEvidencije.ERROR, $"Neuspesno gledanje faktura");
+                loggerServis.EvidentirajDogadjaj(TipEvidencije.ERROR, "Neuspesno gledanje faktura");
                 return new List<Faktura>();
             }
         }

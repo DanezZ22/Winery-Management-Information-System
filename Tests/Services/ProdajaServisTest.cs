@@ -16,6 +16,9 @@ namespace Tests.Services
         private Mock<ILozeRepozitorijum> mockLozeRepo;
         private Mock<IVinogradarstvoServis> mockVinogradarstvo;
         private Mock<ILoggerServis> mockLogger;
+        private Mock<IResursKalkulatorServis> mockResursKalkulator;
+        private Mock<IBalansiranjeSeceraServis> mockBalansiranje;
+        private Mock<IKonfiguracijaVinarije> mockKonfiguracija;
         private ProizvodnjaVinaServis servis;
 
         [SetUp]
@@ -25,8 +28,28 @@ namespace Tests.Services
             mockLozeRepo = new Mock<ILozeRepozitorijum>();
             mockVinogradarstvo = new Mock<IVinogradarstvoServis>();
             mockLogger = new Mock<ILoggerServis>();
-            servis = new ProizvodnjaVinaServis(mockVinaRepo.Object, mockLozeRepo.Object,
-                mockVinogradarstvo.Object, mockLogger.Object);
+            mockResursKalkulator = new Mock<IResursKalkulatorServis>();
+            mockBalansiranje = new Mock<IBalansiranjeSeceraServis>();
+            mockKonfiguracija = new Mock<IKonfiguracijaVinarije>();
+
+            mockKonfiguracija.Setup(k => k.OptimalniBrix).Returns(24.0);
+            mockKonfiguracija.Setup(k => k.DefaultniRegion).Returns("Toskana");
+            mockKonfiguracija.Setup(k => k.PrinosPoLozi).Returns(1.2);
+
+            mockResursKalkulator.Setup(r => r.IzracunajPotrebanBrojLoza(1, 0.75)).Returns(1);
+
+            mockBalansiranje.Setup(b => b.BalansirajSecer(It.IsAny<List<Loza>>(), It.IsAny<double>()))
+                .Returns(new List<Loza>());
+
+            servis = new ProizvodnjaVinaServis(
+                mockVinaRepo.Object,
+                mockLozeRepo.Object,
+                mockVinogradarstvo.Object,
+                mockLogger.Object,
+                mockResursKalkulator.Object,
+                mockBalansiranje.Object,
+                mockKonfiguracija.Object
+            );
         }
 
         [Test]
@@ -34,15 +57,18 @@ namespace Tests.Services
         {
             var obranaLoza = new Loza("Sangiovese", 23.0, 2024, "Chianti")
             { Id = 1, FazaZrelosti = FazaZrelosti.Obrana };
+
             mockLozeRepo.Setup(r => r.PronadjiLozePoFaziZrelosti(FazaZrelosti.Obrana))
                 .Returns(new List<Loza> { obranaLoza });
             mockVinaRepo.Setup(r => r.DodajVino(It.IsAny<Vino>()))
                 .Returns((Vino v) => { v.Id = 1; return v; });
+            mockVinaRepo.Setup(r => r.AzurirajVino(It.IsAny<Vino>())).Returns(true);
 
             var rezultat = servis.ZapocniFermentaciju("Chianti", KategorijaVina.KvalitetnoVino, 1, 0.75);
 
             Assert.That(rezultat.Count, Is.EqualTo(1));
             mockVinaRepo.Verify(r => r.DodajVino(It.IsAny<Vino>()), Times.Once);
+            mockResursKalkulator.Verify(r => r.IzracunajPotrebanBrojLoza(1, 0.75), Times.Once);
         }
 
         [Test]
@@ -51,13 +77,16 @@ namespace Tests.Services
             var novaLoza = new Loza("TestVino", 20.0, 2025, "Toskana")
             { Id = 2, FazaZrelosti = FazaZrelosti.Posadjena };
 
+            mockResursKalkulator.Setup(r => r.IzracunajPotrebanBrojLoza(1, 0.75)).Returns(1);
             mockLozeRepo.Setup(r => r.PronadjiLozePoFaziZrelosti(FazaZrelosti.Obrana))
                 .Returns(new List<Loza>());
+            mockLozeRepo.Setup(r => r.AzurirajLozu(It.IsAny<Loza>())).Returns(true);
             mockVinogradarstvo.Setup(v => v.PosadiNovuLozu("TestVino", "Toskana")).Returns(novaLoza);
             mockVinogradarstvo.Setup(v => v.OberiLoze("TestVino", 1))
                 .Returns(new List<Loza> { novaLoza });
             mockVinaRepo.Setup(r => r.DodajVino(It.IsAny<Vino>()))
                 .Returns((Vino v) => { v.Id = 1; return v; });
+            mockVinaRepo.Setup(r => r.AzurirajVino(It.IsAny<Vino>())).Returns(true);
 
             var rezultat = servis.ZapocniFermentaciju("TestVino", KategorijaVina.StolnoVino, 1, 0.75);
 

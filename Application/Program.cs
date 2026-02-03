@@ -11,8 +11,15 @@ using Services.ProizvodnjaVinaServisi;
 using Services.ProdajaServisi;
 using Services.SkladistenjeServisi;
 using Services.VinogradarstvoServisi;
+using Services.KonfiguracijaServisi;
+using Services.ResursKalkulatorServisi;
+using Services.BalansiranjeSeceraServisi;
+using Services.CenovneStrategije;
+using Services.PopustStrategije;
+using Services.AutomatskaProizvodnjaServisi;
 using Domain.Interfaci;
 using Domain.Modeli.Enumeracije;
+using System.Collections.Generic;
 
 namespace Loger_Bloger
 {
@@ -33,15 +40,42 @@ namespace Loger_Bloger
             IVinskiPodrumiRepozitorijum vinskiPodrumiRepozitorijum = new VinskiPodrumiRepozitorijum(bazaPodataka);
             IFaktureRepozitorijum faktureRepozitorijum = new FaktureRepozitorijum(bazaPodataka);
 
+            IKonfiguracijaVinarije konfiguracija = new VinarijaKonfiguracija();
+
             IAutentifikacijaServis autentifikacijaServis = new AutentifikacioniServis(korisniciRepozitorijum, loggerServis);
             IVinogradarstvoServis vinogradarstvoServis = new VinogradarstvoServis(lozeRepozitorijum, loggerServis);
-            IProizvodnjaVinaServis proizvodnjaVinaServis = new ProizvodnjaVinaServis(vinaRepozitorijum, lozeRepozitorijum, vinogradarstvoServis, loggerServis);
+
+            IResursKalkulatorServis resursKalkulator = new ResursKalkulatorServis(konfiguracija);
+            IBalansiranjeSeceraServis balansiranjeSecera = new BalansiranjeSeceraServis(vinogradarstvoServis, lozeRepozitorijum, konfiguracija);
+
+            IProizvodnjaVinaServis proizvodnjaVinaServis = new ProizvodnjaVinaServis(
+                vinaRepozitorijum,
+                lozeRepozitorijum,
+                vinogradarstvoServis,
+                loggerServis,
+                resursKalkulator,
+                balansiranjeSecera,
+                konfiguracija
+            );
+
             IPakovanjeServis pakovanjeServis = new PakovanjeServis(vinaRepozitorijum, paleteRepozitorijum, loggerServis, vinskiPodrumiRepozitorijum);
             IVinskiPodrumServis vinskiPodrumServis = new VinskiPodrumServis(vinskiPodrumiRepozitorijum, loggerServis);
 
             ISkladistenjeServis vinskiPodrumSkladistenjeServis = new VinskiPodrumSkladistenjeServis(paleteRepozitorijum, loggerServis);
             ISkladistenjeServis lokalniKelarSkladistenjeServis = new LokalniKelarSkladistenjeServis(loggerServis, paleteRepozitorijum, vinskiPodrumiRepozitorijum);
 
+            IEnumerable<ICenovnaStrategija> cenovneStrategije = new List<ICenovnaStrategija>
+            {
+                new StolnoVinoCenovnaStrategija(),
+                new KvalitetnoVinoCenovnaStrategija(),
+                new PremijumVinoCenovnaStrategija()
+            };
+
+            IEnumerable<IPopustStrategija> popustStrategije = new List<IPopustStrategija>
+            {
+                new BezPopustaStrategija(),
+                new DiskontPopustStrategija()
+            };
 
             if (korisniciRepozitorijum.SviKorisnici().Count() == 0)
             {
@@ -75,15 +109,26 @@ namespace Loger_Bloger
 
             if (prijavljen.Uloga == TipKorisnika.Kupac)
             {
+                IAutomatskaProizvodnjaFacade automatskaProizvodnja = new AutomatskaProizvodnjaFacade(
+                    vinaRepozitorijum,
+                    proizvodnjaVinaServis,
+                    pakovanjeServis,
+                    vinskiPodrumiRepozitorijum,
+                    paleteRepozitorijum,
+                    resursKalkulator,
+                    loggerServis,
+                    konfiguracija
+                );
+
                 prodajaServis = new ProdajaServisAutomatski(
                     vinaRepozitorijum,
                     loggerServis,
                     faktureRepozitorijum,
-                    paleteRepozitorijum,
                     skladistenjeServis,
-                    proizvodnjaVinaServis,
-                    pakovanjeServis,
-                    vinskiPodrumiRepozitorijum
+                    automatskaProizvodnja,
+                    resursKalkulator,
+                    cenovneStrategije,
+                    popustStrategije
                 );
             }
             else
@@ -92,8 +137,10 @@ namespace Loger_Bloger
                     vinaRepozitorijum,
                     loggerServis,
                     faktureRepozitorijum,
-                    paleteRepozitorijum,
-                    skladistenjeServis
+                    skladistenjeServis,
+                    resursKalkulator,
+                    cenovneStrategije,
+                    popustStrategije
                 );
             }
 
@@ -109,6 +156,7 @@ namespace Loger_Bloger
             );
             meni.PrikaziMeni();
         }
+
         private static void InicijalizujTestnePodatke(
             IVinogradarstvoServis vinogradarstvoServis,
             IVinskiPodrumiRepozitorijum vinskiPodrumiRepozitorijum,
